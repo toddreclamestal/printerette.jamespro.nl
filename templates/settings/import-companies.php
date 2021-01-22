@@ -61,6 +61,7 @@ ini_set('display_errors', 1);
         if (isset($_FILES['import_companies'])) {
 
             if (isset($_FILES['import_companies'])) {
+                // Upload bestand uitlezen
                 $fileName = $_FILES['import_companies']['tmp_name'];
                 if ( $xlsx = SimpleXLS::parse($fileName) ) {
                     $filecontent = $xlsx->rows();

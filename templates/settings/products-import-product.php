@@ -11,6 +11,16 @@
 
 $productgroup = $dbClient->selectSingle('productGroups', 'id = :id', array(':id' => $id));
 $products = $dbClient->select('products', 'productGroupId = :id', array(':id' => $id));
+
+require_once 'classes/SimpleXLSX.php';
+
+function pre($print){
+    echo '<pre>'.print_r($print,true).'</pre>';
+}
+
+// Laat alle errors zien!
+//error_reporting(E_ALL);
+//ini_set('display_errors', 1);
 ?>
 <div class="row">
     <div class="col-3 col-lg-2 bg-grey px-0" style="margin-top:-60px;padding-top:60px;">
@@ -41,21 +51,12 @@ $products = $dbClient->select('products', 'productGroupId = :id', array(':id' =>
         } ?>
         <h4><?php $translate->__('products', true); ?></h4>
         <p>Voer onderstaande velden in om producten te importeren in de groep <strong><?php echo $productgroup['name']; ?></strong></p>
-        <p>Let op het bestand dient in CSV formaat te zijn.</p>
+        <p>Let op het bestand dient in XLSX formaat te zijn.</p>
         <form method="post" enctype="multipart/form-data">
             <div class="row">
                 <div class="col-md-6">
                     <label>Bestand:</label>
                     <input type="file" class="form-control" value="" name="import_products" id="import_products">
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-6">
-                    <label>Scheidingsteken:</label>
-                    <select name="scheidingsteken" id="scheidingsteken" class="form-control">
-                        <option value=";">";" (puntkomma)</option>
-                        <option value=",">"," (komma)</option>
-                    </select>
                 </div>
             </div>
             <div class="row">
@@ -71,331 +72,258 @@ $products = $dbClient->select('products', 'productGroupId = :id', array(':id' =>
             <a href="<?= BASE_URL; ?>settings/products-view-group/<?php echo $id; ?>/" class="btn">Annuleren</a>
         </form>
         <?php if (isset($_FILES['import_products']) || isset($_SESSION['import_csv'])) {
-            ?>
+        ?>
             <hr>
             <?php
             if (isset($_FILES['import_products'])) {
-                $scheidingsteken = $_POST['scheidingsteken'];
-                $row = 1;
-                $file = $_FILES['import_products']['tmp_name'];
-                ini_set('auto_detect_line_endings', true);
-                if (($handle = fopen($file, "rb")) !== false) {
-                    while ($data[] = fgetcsv($handle, 0, $scheidingsteken, '"')) {
-                    }
-                    $_SESSION['import_csv'] = $data;
-                    $_SESSION['delete_products'] = $_POST['delete'];
-                    //print_r($_SESSION['import_csv'][0]);
-                    fclose($handle);
+                // Upload bestand uitlezen
+                $fileName = $_FILES['import_products']['tmp_name'];
+                // XLSX uitlezen
+                if ( $xlsx = SimpleXLSX::parse($fileName) ) {
+                    $filecontent = $xlsx->rows();
+                } else {
+                    echo SimpleXLSX::parseError();
                 }
-            } ?>
 
-            <?php if ($user->getVar('clientId') == '90001053') {
-                //van der Pol?>
-                <form method="post" class="loading import">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label>Naam: </label>
-                            <select name="name" class="form-control">
-                                <option>leeg</option>
-                                <?php foreach ($_SESSION['import_csv'][0] as $key => $value) {
-                                    ?>
-                                    <option value="<?= $key; ?>" <?php if (strtolower($value) == 'naam') echo 'selected="selected"'; ?>><?= $value; ?></option>
-                                    <?php
-                                } ?>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label>Code: </label>
-                            <select name="code" class="form-control">
-                                <option>leeg</option>
-                                <?php foreach ($_SESSION['import_csv'][0] as $key => $value) {
-                                    ?>
-                                    <option value="<?= $key; ?>" <?php if (strtolower($value) == 'code') echo 'selected="selected"'; ?>><?= $value; ?></option>
-                                    <?php
-                                } ?>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label>Staffel 1: </label>
-                            <select name="amount-1" class="form-control">
-                                <option>leeg</option>
-                                <?php foreach ($_SESSION['import_csv'][0] as $key => $value) {
-                                    ?>
-                                    <option value="<?= $key; ?>"><?= $value; ?></option>
-                                    <?php
-                                } ?>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label>Staffel 2: </label>
-                            <select name="amount-2" class="form-control">
-                                <option>leeg</option>
-                                <?php foreach ($_SESSION['import_csv'][0] as $key => $value) {
-                                    ?>
-                                    <option value="<?= $key; ?>"><?= $value; ?></option>
-                                    <?php
-                                } ?>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label>Staffel 3: </label>
-                            <select name="amount-3" class="form-control">
-                                <option>leeg</option>
-                                <?php foreach ($_SESSION['import_csv'][0] as $key => $value) {
-                                    ?>
-                                    <option value="<?= $key; ?>"><?= $value; ?></option>
-                                    <?php
-                                } ?>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <input type="submit" value="Producten importeren" class="btn btn-primary">
-                        </div>
-                    </div>
-                </form>
-                <?php
-            } else {
-                ?>
-                <form method="post" class="loading import">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label>Naam: </label>
-                            <select name="name" class="form-control">
-                                <option>leeg</option>
-                                <?php foreach ($_SESSION['import_csv'][0] as $key => $value) {
-                                    ?>
-                                    <option value="<?= $key; ?>" <?php if (strstr(strtolower($value), 'naam')) echo 'selected="selected"'; ?>><?= $value; ?></option>
-                                    <?php
-                                } ?>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label>Code: </label>
-                            <select name="code" class="form-control">
-                                <option>leeg</option>
-                                <?php foreach ($_SESSION['import_csv'][0] as $key => $value) {
-                                    ?>
-                                    <option value="<?= $key; ?>" <?php if (strtolower($value) == 'code') echo 'selected="selected"'; ?>><?= $value; ?></option>
-                                    <?php
-                                } ?>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label>Aantal/Oplage: </label>
-                            <select name="amount" class="form-control">
-                                <option>leeg</option>
-                                <?php foreach ($_SESSION['import_csv'][0] as $key => $value) {
-                                    ?>
-                                    <option value="<?= $key; ?>" <?php if (strtolower($value) == 'aantal') echo 'selected="selected"'; ?>><?= $value; ?></option>
-                                    <?php
-                                } ?>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label>Prijs verkoop: </label>
-                            <select name="bruto" class="form-control">
-                                <option>leeg</option>
-                                <?php foreach ($_SESSION['import_csv'][0] as $key => $value) {
-                                    ?>
-                                    <option value="<?= $key; ?>" <?php if (strtolower($value) == 'prijs verkoop') echo 'selected="selected"'; ?>><?= $value; ?></option>
-                                    <?php
-                                } ?>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label>Prijs inkoop: </label>
-                            <select name="netto" class="form-control">
-                                <option>leeg</option>
-                                <?php foreach ($_SESSION['import_csv'][0] as $key => $value) {
-                                    ?>
-                                    <option value="<?= $key; ?>" <?php if (strtolower($value) == 'prijs inkoop') echo 'selected="selected"'; ?>><?= $value; ?></option>
-                                    <?php
-                                } ?>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label>Percentage: </label>
-                            <select name="percentage" class="form-control">
-                                <option>leeg</option>
-                                <?php foreach ($_SESSION['import_csv'][0] as $key => $value) {
-                                    ?>
-                                    <option value="<?= $key; ?>" <?php if (strtolower($value) == 'percentage/marge') echo 'selected="selected"'; ?>><?= $value; ?></option>
-                                    <?php
-                                } ?>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label>Grootboeknummer: </label>
-                            <select name="grootboeknummer" class="form-control">
-                                <option>leeg</option>
-                                <?php foreach ($_SESSION['import_csv'][0] as $key => $value) {
-                                    ?>
-                                    <option value="<?= $key; ?>" <?php if (strtolower($value) == 'grootboek') echo 'selected="selected"'; ?>><?= $value; ?></option>
-                                    <?php
-                                } ?>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label>Planbaar: </label>
-                            <select name="planable" class="form-control">
-                                <option>leeg</option>
-                                <?php foreach ($_SESSION['import_csv'][0] as $key => $value) {
-                                    ?>
-                                    <option value="<?= $key; ?>" <?php if (strtolower($value) == 'planbaar (1/0)') echo 'selected="selected"'; ?>><?= $value; ?></option>
-                                    <?php
-                                } ?>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label>Extra: </label>
-                            <select name="extra1" class="form-control">
-                                <option>leeg</option>
-                                <?php foreach ($_SESSION['import_csv'][0] as $key => $value) {
-                                    ?>
-                                    <option value="<?= $key; ?>" <?php if (strtolower($value) == 'extra') echo 'selected="selected"'; ?>><?= $value; ?></option>
-                                    <?php
-                                } ?>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <input type="submit" value="Producten importeren" class="btn btn-primary">
-                        </div>
-                    </div>
-                </form>
-                <?php
-            } ?>
-            <?php
+                // Producten Array maken
+                $products = array();
+                $productsDiscounts = array();
+                // Zoek in rij 5 naar 'PR: Standaard
+                $search_PRStandaard = array_keys($filecontent[5], 'PR: Standaard', true);
+                // De laatste ID waar hij in wordt gevonden:
+                $end_col = end($search_PRStandaard);
+
+                foreach($filecontent as $key => $row) {
+                    $row_nr = $key;
+                    // Skip eerste 5 rijen informatie;
+                    if ($key > 5) {
+                        // Producten zonder staffel prijzen
+                        $product_id = '';
+                        $product_name = $row[2];
+                        $product_code = $row[0];
+                        $product_amount = '1';
+                        $product_bruto = $row[6];
+                        $product_netto = '';
+                        $product_percentage = '';
+                        $product_productGroupId = '';
+                        $product_grootboeknummer = '';
+                        $product_planable = '';
+                        $product_extra3 = '';
+                        $product_extra2 = '';
+                        $product_extra1 = 'Vaste prijs';
+
+                        if ($product_bruto != '') {
+                            $products[] = array(
+                                'id' => $product_id,
+                                'name' => $product_name,
+                                'code' => $product_code,
+                                'amount' => $product_amount,
+                                'bruto' => $product_bruto,
+                                'netto' => $product_netto,
+                                'percentage' => $product_percentage,
+                                'productGroupId' => $product_productGroupId,
+                                'grootboeknummer' => $product_grootboeknummer,
+                                'planable' => $product_planable,
+                                'extra3' => $product_extra3,
+                                'extra2' => $product_extra2,
+                                'extra1' => $product_extra1,
+                            );
+                        }
+                    }
+
+                    foreach ($row as $key => $col) {
+                        if ($key > $end_col) {
+                            // Producten met Klanten korting
+                            $priceDiscount = explode('PR: ',$filecontent[5][$key]); // Split title bijvoorbeeld: PR: 3WO-PV (excel row:5 / key = kolom)
+                            if(is_array($priceDiscount)){
+                                $priceDiscountGroup = $priceDiscount[1];
+                            }else{
+                                $priceDiscountGroup = '';
+                            }
+                            // STANDAARD PRIJZEN
+                            // Staffels verzamelen
+                            if ($filecontent[3][$key] != '') {
+                                $staffel = str_replace('Staffel: ', '', $filecontent[3][$key]);
+                            } else {
+                                $staffel = '';
+                            }
+                            // Dit zijn alle producten!
+                            if ($row_nr > 5) {
+                                if ($col != '') {
+                                    // Product heeft staffel prijs!
+                                    if($staffel != '') {
+                                        $staffel_split = explode(' ', $staffel);
+                                        $def_staffel = $staffel_split[0]; // 0 = eerste || 2 = laatste
+                                    }else{
+                                        $def_staffel = 1;
+                                    }
+                                    $productsDiscounts[] = array(
+                                        'id' => $product_id,
+                                        'name' => $product_name,
+                                        'code' => $product_code,
+                                        'amount' => $def_staffel,
+                                        'price' => $col,
+                                        'pricegroup' => $priceDiscountGroup
+                                    );
+                                }
+                            }
+                        }
+                        if ($key < $end_col) {
+                            // Producten ZONDER Klanten korting / standaard prijzen
+                            // Staffels verzamelen
+                            if ($filecontent[3][$key] != '') {
+                                $staffel = str_replace('Staffel: ', '', $filecontent[3][$key]);
+                            } else {
+                                $staffel = '';
+                            }
+                            if ($row_nr > 5) {
+                                if ($staffel != '' && $col != '') {
+                                    // Product heeft staffel prijs!
+                                    $staffel_split = explode(' ', $staffel);
+                                    $def_staffel = $staffel_split[0]; // 0 = eerste || 2 = laatste
+                                    $products[] = array(
+                                        'id' => $product_id,
+                                        'name' => $product_name,
+                                        'code' => $product_code,
+                                        'amount' => $def_staffel,
+                                        'bruto' => $col,
+                                        'netto' => $product_netto,
+                                        'percentage' => $product_percentage,
+                                        'productGroupId' => $product_productGroupId,
+                                        'grootboeknummer' => $product_grootboeknummer,
+                                        'planable' => $product_planable,
+                                        'extra3' => $product_extra3,
+                                        'extra2' => $product_extra2,
+                                        'extra1' => '',
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+                // Einde producten array
+                $_SESSION['import_products'] = $products;
+                $_SESSION['import_discountproducts'] = $productsDiscounts;
+                $_SESSION['delete_products'] = $_POST['delete'];
+                $countProducts = COUNT($_SESSION['import_products']);
+                $countDiscountProducts = COUNT($_SESSION['import_discountproducts']);
+//                $scheidingsteken = $_POST['scheidingsteken'];
+//                $row = 1;
+//                $file = $_FILES['import_products']['tmp_name'];
+//                ini_set('auto_detect_line_endings', true);
+//                if (($handle = fopen($file, "rb")) !== false) {
+//                    while ($data[] = fgetcsv($handle, 0, $scheidingsteken, '"')) {
+//                    }
+//                    $_SESSION['import_csv'] = $data;
+//                    $_SESSION['delete_products'] = $_POST['delete'];
+//                    //print_r($_SESSION['import_csv'][0]);
+//                    fclose($handle);
+//                }
+            }
         } ?>
+        <?php if($_FILES['import_products'] != ''){?>
+        <hr class="margin-b-60" id="stap2" name="stap2">
+        <h2 class="margin-t-40"><?php echo 'Wij hebben <strong>'.$countProducts.'</strong> producten gevonden!';?></h2>
+        <p>Klik op Producten importeren om de import te starten!</p>
+        <form method="post" class="loading import">
+            <div class="row">
+                <div class="col-md-6">
+                    <input type="submit" name="start_import" value="Producten importeren" class="btn btn-primary">
+                </div>
+            </div>
+        </form>
+        <?php }?>
 
         <?php
-        if (isset($_POST['name'])) {
-            $i = 0;
+        if(isset($_POST['start_import']) && $_POST['start_import'] == 'Producten importeren'){
+            $i=0;
+            echo 'Lets go import...<br>';
 
             if ($_SESSION['delete_products'] == '1') {
                 $dbClient->delete('products', 'productGroupId = :id', array(':id' => $id));
             }
-
-            foreach ($_SESSION['import_csv'] as $key => $import) {
-                if ($key != 0 && $import[$_POST['name']] != '') {
-                    $update = $dbClient->selectSingle('products INNER JOIN productGroups ON products.productGroupId = productGroups.id', 'products.code = :code AND products.amount = :amount', array(
-                        ':code' => ($import[$_POST['code']] != '') ? $import[$_POST['code']] : $import[$_POST['name']],
-                        ':amount' => $import[$_POST['amount']]
-                    ));
-
-                    if ($user->getVar('clientId') == '90001053') {
-                        if ($_POST['amount-1'] != '') {
-                            $insertRow = array(
-                                'name' => $import[$_POST['name']],
-                                'code' => ($import[$_POST['code']] != '') ? $import[$_POST['code']] : $import[$_POST['name']],
-                                'amount' => $_SESSION['import_csv'][0][$_POST['amount-1']],
-                                'netto' => str_replace(array(',', '€', ' '), array('.', '', ''), $import[$_POST['amount-1']]), //verkoop
-                                'productGroupId' => $id,
-                            );
-                            $product = $dbClient->insert("products", $insertRow);
-                            if ($product != "") {
-                                $i++;
-                            }
-                        }
-                        if ($_POST['amount-2'] != '') {
-                            $insertRow = array(
-                                'name' => $import[$_POST['name']],
-                                'code' => ($import[$_POST['code']] != '') ? $import[$_POST['code']] : $import[$_POST['name']],
-                                'amount' => $_SESSION['import_csv'][0][$_POST['amount-2']],
-                                'netto' => str_replace(array(',', '€', ' '), array('.', '', ''), $import[$_POST['amount-2']]), //verkoop
-                                'productGroupId' => $id,
-                            );
-                            $product = $dbClient->insert("products", $insertRow);
-                            if ($product != "") {
-                                $i++;
-                            }
-                        }
-                        if ($_POST['amount-3'] != '') {
-                            $insertRow = array(
-                                'name' => $import[$_POST['name']],
-                                'code' => ($import[$_POST['code']] != '') ? $import[$_POST['code']] : $import[$_POST['name']],
-                                'amount' => $_SESSION['import_csv'][0][$_POST['amount-3']],
-                                'netto' => str_replace(array(',', '€', ' '), array('.', '', ''), $import[$_POST['amount-3']]), //verkoop
-                                'productGroupId' => $id,
-                            );
-                            $product = $dbClient->insert("products", $insertRow);
-                            if ($product != "") {
-                                $i++;
-                            }
-                        }
-                    } elseif (!isset($update['code'])) {
-                        $insertRow = array(
-                            'name' => $import[$_POST['name']],
-                            'code' => ($import[$_POST['code']] != '') ? $import[$_POST['code']] : $import[$_POST['name']],
-                            'amount' => (($import[$_POST['amount']] != '') ? $import[$_POST['amount']] : 1),
-                            'netto' => str_replace(',', '.', $import[$_POST['bruto']]),
-                            'bruto' => str_replace(',', '.', $import[$_POST['netto']]),
-                            'percentage' => str_replace(',', '.', $import[$_POST['percentage']]),
+            // Standaard producten inladen!
+            echo 'Standaard prijzen inladen..<br>';
+            foreach ($_SESSION['import_products'] as $key => $product) {
+                $update = $dbClient->selectSingle('products', 'code = :code AND amount = :amount', array(
+                    ':code' => ($product['code'] != '') ? $product['code'] : $product['name'],
+                    ':amount' => $product['amount']
+                ));
+                if (!isset($update['code'])) {
+                    $insertProductsRow = array(
+                        'name' => $product['name'],
+                        'code' => ($product['code'] != '') ? $product['code'] : $product['name'],
+                        'amount' => (($product['amount'] != '') ? $product['amount'] : 1),
+                        'bruto' => str_replace(',', '.', $product['bruto']),
+                        'netto' => str_replace(',', '.', $product['netto']),
+                        'percentage' => str_replace(',', '.', $product['percentage']),
+                        'productGroupId' => 0,
+                        'grootboeknummer' => $product['grootboeknummer'],
+                        'planable' => ($product['planable'] == '1') ? '1' : '0',
+                        'extra3' => $product['extra3'],
+                        'extra2' => $product['extra2'],
+                        'extra1' => $product['extra1']
+                    );
+                    $import_product = $dbClient->insert("products", $insertProductsRow);
+                    $i++;
+                }else{
+                    $product = $dbClient->update(
+                        'products',
+                        array(
+                            'name' => $product['name'],
+                            'netto' => str_replace(',', '.', $product['bruto']),
+                            'bruto' => str_replace(',', '.', $product['bruto']),
+                            'percentage' => str_replace(',', '.', $product['percentage']),
                             'productGroupId' => $id,
-                            'grootboeknummer' => $import[$_POST['grootboeknummer']],
-                            'planable' => ($import[$_POST['planable']] == '1') ? '1' : '0',
-                            'extra1' => $import[$_POST['extra1']],
-                        );
-
-//                        if($user->getId() == '2'){
-//                            echo '<pre>'.print_r($insertRow,true).'</pre>';
-//                        }else{
-                        $product = $dbClient->insert("products", $insertRow);
-//                            echo '<pre>'.print_r($dbClient,true).'</pre>';
-//                        }
-                        if ($product != "") {
-                            $i++;
-                        }
-                    } else {
-                        $product = $dbClient->update(
-                            'products',
-                            array(
-                                'name' => $import[$_POST['name']],
-                                'netto' => str_replace(',', '.', $import[$_POST['bruto']]),
-                                'bruto' => str_replace(',', '.', $import[$_POST['netto']]),
-                                'percentage' => str_replace(',', '.', $import[$_POST['percentage']]),
-                                'productGroupId' => $id,
-                                'grootboeknummer' => $import[$_POST['grootboeknummer']],
-                            ),
-                            'code = :codeSelect AND amount = :amountSelect',
-                            array(
-                                ':code' => ($import[$_POST['code']] != '') ? $import[$_POST['code']] : $import[$_POST['name']],
-                                ':amount' => $import[$_POST['amount']]
-                            )
-                        );
-                    }
+                            'grootboeknummer' => $product['grootboeknummer'],
+                        ),
+                        'code = :codeSelect AND amount = :amountSelect',
+                        array(
+                            ':code' => ($product['code'] != '') ? $product['code'] : $product['name'],
+                            ':amount' => $product['amount']
+                        )
+                    );
                 }
             }
-
+            // Kortingen inladen
+            echo 'Kortingen prijzen inladen..<br>';
+            foreach ($_SESSION['import_discountproducts'] as $key => $discountProduct) {
+                $update = $dbClient->selectSingle('productsDiscounts', 'product_code = :code AND product_amount = :amount AND product_pricegroup = :pricegroup', array(
+                    ':code' => ($discountProduct['code'] != '') ? $discountProduct['code'] : $discountProduct['name'],
+                    ':amount' => $discountProduct['amount'],
+                    ':pricegroup' => $discountProduct['pricegroup'],
+                ));
+                if (!isset($update['code'])) {
+                    $insertDiscountProductsRow = array(
+                        'product_name' => $discountProduct['name'],
+                        'product_code' => ($discountProduct['code'] != '') ? $discountProduct['code'] : $discountProduct['name'],
+                        'product_amount' => (($discountProduct['amount'] != '') ? $discountProduct['amount'] : 1),
+                        'product_price' => str_replace(',', '.', $discountProduct['price']),
+                        'product_pricegroup' => $discountProduct['pricegroup']
+                    );
+                    $import_discountProduct = $dbClient->insert("productsDiscounts", $insertDiscountProductsRow);
+                    $i++;
+                }else{
+                    $productDiscount = $dbClient->update(
+                        'productsDiscounts',
+                        array(
+                            'product_name' => $discountProduct['name'],
+                            'product_amount' => (($discountProduct['amount'] != '') ? $discountProduct['amount'] : 1),
+                            'product_price' => str_replace(',', '.', $discountProduct['price']),
+//                            'product_pricegroup' => $discountProduct['pricegroup'],
+                        ),
+                        'product_code = :codeSelect AND amount = :amountSelect AND product_pricegroup = :pricegroup',
+                        array(
+                            ':code' => ($discountProduct['code'] != '') ? $discountProduct['code'] : $discountProduct['name'],
+                            ':amount' => $discountProduct['amount'],
+                            ':pricegroup' => $discountProduct['pricegroup'],
+                        )
+                    );
+                }
+            }
             unset($_SESSION['import_csv']);
-            unset($_SESSION['delete_products']); ?>
+            unset($_SESSION['delete_products']);
+            ?>
             <hr>
             <div class="row">
                 <div class="col-md-6">
