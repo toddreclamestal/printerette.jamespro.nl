@@ -105,7 +105,7 @@ function pre($print){
                         $product_bruto = $row[6];
                         $product_netto = '';
                         $product_percentage = '';
-                        $product_productGroupId = '';
+                        $product_productGroupId = 1;
                         $product_grootboeknummer = '';
                         $product_planable = '';
                         $product_extra3 = '';
@@ -189,7 +189,7 @@ function pre($print){
                                         'bruto' => $col,
                                         'netto' => $product_netto,
                                         'percentage' => $product_percentage,
-                                        'productGroupId' => $product_productGroupId,
+                                        'productGroupId' => 1,
                                         'grootboeknummer' => $product_grootboeknummer,
                                         'planable' => $product_planable,
                                         'extra3' => $product_extra3,
@@ -257,7 +257,7 @@ function pre($print){
                         'bruto' => str_replace(',', '.', $product['bruto']),
                         'netto' => str_replace(',', '.', $product['netto']),
                         'percentage' => str_replace(',', '.', $product['percentage']),
-                        'productGroupId' => 0,
+                        'productGroupId' => 1,
                         'grootboeknummer' => $product['grootboeknummer'],
                         'planable' => ($product['planable'] == '1') ? '1' : '0',
                         'extra3' => $product['extra3'],
@@ -274,7 +274,7 @@ function pre($print){
                             'netto' => str_replace(',', '.', $product['bruto']),
                             'bruto' => str_replace(',', '.', $product['bruto']),
                             'percentage' => str_replace(',', '.', $product['percentage']),
-                            'productGroupId' => $id,
+                            'productGroupId' => 1,
                             'grootboeknummer' => $product['grootboeknummer'],
                         ),
                         'code = :codeSelect AND amount = :amountSelect',
