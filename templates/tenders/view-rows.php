@@ -15,7 +15,7 @@ if (floatval($company['discount']) != 0 && $user->getVar('clientId') != '1275') 
     $newDiscount = floatval($company['discount']);
 }
 
-echo 'GERROY';
+
 ?>
 <div class="needspaging">
     <div class="row hidden-xs">
@@ -311,7 +311,6 @@ echo 'GERROY';
         return toFixedNew(Number.parseFloat(x), 2);
     }
 
-
     $('#page').on('click', '.editcalc', function (e) {
         e.preventDefault();
 
@@ -476,10 +475,8 @@ echo 'GERROY';
 //    	if(selected.val().length >= 3 && found == false){
                 var amountCalc = eval(selected.parent().next('td').find('input').val() * $('#amount').val());
                 var amountParentCalc = eval($('.calculationAmount').val());
-                var query = 'query=' + encodeURIComponent(selected.val()) + '&amount=' + amountCalc<?php if($company['companyExtra5']){ echo " + '&discountGroup=".$company['companyExtra5']."'";}?>;
+                var query = 'query=' + encodeURIComponent(selected.val()) + '&amount=' + amountCalc;
                 var url = "/v2/tenders/json-products/";
-
-                console.log(url+query);
 
                 $.get(url, query, function (data) {
                     if ($('div.list_input').length == 0) {
@@ -525,7 +522,7 @@ echo 'GERROY';
                 var query = selected.parent().prev('td').find('input').val();
 
                 query = 'query=' + encodeURIComponent(query) + '&amount=' + amountCalc;
-                var url = "v2/tenders/json-products/?<?php ($company['companyExtra5'] ? 'discountGroup='.$company['companyExtra5'].'&' : '');?>query=";
+                var url = "/tenders/json-products/?query=";
                 $.get(url, query, function (data) {
                     if (data[0]) {
                         selected.parent().parent().find('#priceInkoop').val(data[0].price_gross);
