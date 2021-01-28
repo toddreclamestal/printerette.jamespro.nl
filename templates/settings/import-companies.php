@@ -91,6 +91,14 @@ ini_set('display_errors', 1);
                             $statusSplit = explode(' ', $actiefCol); // [0] = Actief: / [1] => Ja / [5] = Actief vanaf: 02-11-2020 / [9] = Inactief vanaf ... / [32] = Reden waarom inactief
                             $clientActive = $statusSplit[1]; // Ja of Nee
 
+//                            if($moreInfo[6] == ''){
+//                                continue;
+//                            }else{
+//                                pre($client);
+//                                pre($moreInfo);
+//                                die();
+//                            }
+
                             /*
                              * MORE INFO COL
                             adres = 2
@@ -134,7 +142,7 @@ ini_set('display_errors', 1);
                                     'companyExtra3' => '',
                                     'companyExtra4' => '',
                                     'companyExtra5' => htmlspecialchars($moreInfo[6]), // TODO: Tijdelijk gebruiken voor de Prijsgroep
-                                    'is_deleted' => 0, //
+                                    //'is_deleted' => 0, //
                                     'language' => '',
                                     // ### branches Fields
                                     'branchId' => '',
@@ -202,6 +210,7 @@ ini_set('display_errors', 1);
                         'companySupplier' => 0, // Hardcoded Levernacier NIET TODO: Besprek met Peter of dit goed is!
                         'companyKvk' => $client['companyKvk'],
                         'companyVat' => $client['companyVat'],
+                        'companyExtra5' => $client['companyExtra5'],
                         'clientId' => 0
                     ));
 
