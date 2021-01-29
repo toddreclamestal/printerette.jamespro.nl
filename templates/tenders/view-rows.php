@@ -14,8 +14,6 @@ $newDiscount = 0;
 if (floatval($company['discount']) != 0 && $user->getVar('clientId') != '1275') {
     $newDiscount = floatval($company['discount']);
 }
-
-echo 'GERROY';
 ?>
 <div class="needspaging">
     <div class="row hidden-xs">
