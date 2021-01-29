@@ -25,8 +25,6 @@ $company = $dbClient->selectSingle(
     )
 );
 
-
-
 if (isset($_POST['templateAdd'])) {
     $template = $dbClient->selectSingle('tenderTemplates', 'tenderTemplateId = :tenderTemplateId', array(':tenderTemplateId' => $_POST['templateAdd']));
     $rows = $dbClient->select('tenderTemplateRows', 'tendertemplateId = :tendertemplateId ORDER BY tendertemplaterowOrder ASC', array(':tendertemplateId' => $_POST['templateAdd']));
@@ -311,9 +309,11 @@ if (isset($_GET['addTenderRow']) && $user->getPermission('tenders') >= 2) {
         'tenderrowBold' => $_POST['tenderrowBold'],
         'tenderrowDescription' => $_POST['tenderrowDescription'],
         'tenderrowValue' => $_POST['tenderrowValue'],
-        'tenderrowOrder' => $orderNew
+        'tenderrowOrder' => $orderNew,
 //        'tenderrowOrder' =>$_POST['tenderrowOrder']
+        'clientId' => $user->getVar('clientId'), // TODO: <- Deze heb ik toegevoegd, Kreeg een database fout bij insert, is dit wel de laatste versie?
     ));
+
     echo '        <div class="task-header tenderrows" id="' . $insert . '">
             <form class="taskForm" method="post">
                 <a href="#" class="btn btn-grey deleteTenderRow"><i class="fa fa-trash"></i></a>
