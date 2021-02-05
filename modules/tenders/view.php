@@ -254,9 +254,15 @@ if (isset($_GET['addCalculationTemplate']) && $user->getPermission('tenders') >=
     exit();
 }
 
+function pre($var){
+    echo '<pre>'.print_r($var,true).'</pre>';
+}
+
 
 if (isset($_POST['description'], $_POST['priceInkoop']) && $user->getPermission('tenders') >= 2) {
     $tenderrowOrder = $dbClient->selectSingle('tenderrows', 'tenderId = :tenderId ORDER BY tenderrowOrder DESC', array(':tenderId' => $id));
+
+
     if (isset($tenderrowOrder['tenderrowOrder'])) {
         $orderNew = $tenderrowOrder['tenderrowOrder'];
     } else {
@@ -268,8 +274,13 @@ if (isset($_POST['description'], $_POST['priceInkoop']) && $user->getPermission(
         'tenderrowDescription' => 'calculatie',
         // 'tenderrowSelected' => $_POST['tenderrowSelected'],
         'tenderrowValue' => '',
+//        'tenderrowBold' => 0,
+//        'clientId' => 0,
         'tenderrowOrder' => $orderNew,
     ));
+
+//    pre($dbClient);
+
     $calculation = $dbClient->insert('calculations', array(
         'description' => $_POST['description'],
         'amount' => $_POST['amount'],
@@ -289,10 +300,10 @@ if (isset($_POST['description'], $_POST['priceInkoop']) && $user->getPermission(
         ));
     }
 
-    // if ($_SERVER['REMOTE_ADDR'] == '77.242.112.190') {
-    //     echo '<pre>'.print_r($_POST, true).'</pre>';
-    //     exit();
-    // }
+//     if ($_SERVER['REMOTE_ADDR'] == '77.242.112.190') {
+//         echo '<pre>'.print_r($_POST, true).'</pre>';
+//         exit();
+//     }
 
     header('location: ' . $_SERVER['REQUEST_URI']);
     exit();

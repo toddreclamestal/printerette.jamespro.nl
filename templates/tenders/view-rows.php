@@ -475,7 +475,7 @@ if (floatval($company['discount']) != 0 && $user->getVar('clientId') != '1275') 
                 var amountCalc = eval(selected.parent().next('td').find('input').val() * $('#amount').val());
                 var amountParentCalc = eval($('.calculationAmount').val());
                 var query = 'query=' + encodeURIComponent(selected.val()) + '&amount=' + amountCalc<?php if($company['companyExtra5']){ echo " + '&discountGroup=".$company['companyExtra5']."'";}?>;
-                var url = "/v2/tenders/json-products/";
+                var url = "/v2/tenders/json-products/?";
 
                 console.log(url+query);
 
